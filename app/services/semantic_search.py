@@ -1,40 +1,67 @@
+import os
 import asyncio
-from sqlalchemy import select
+from google import genai
+from google.genai import types
+from sqlalchemy import select, text
 from app.models.schema import Metric, Dimension, BusinessGlossary
 from app.models.domain import ExtractedQuery
 from app.core.database import AsyncSessionLocal
 
-# Note: In a full production environment, these functions would use pgvector cosine 
-# similarity (<=>). For our local MVP to ensure stability, we are using fast ILIKE 
-# keyword matching (which is standard practice before falling back to vector search).
+# Initialize the modern Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+async def get_embedding(text_input: str) -> list[float]:
+    """Converts a natural language string into a 768-dimensional vector."""
+    response = client.models.embed_content(
+        model="models/gemini-embedding-001",
+        contents=text_input,
+        config=types.EmbedContentConfig(
+            output_dimensionality=768 # Forces 768 dimensions to match our database
+        )
+    )
+    return response.embeddings[0].values
 
 async def fetch_metric(metric_name: str):
-    """Searches the metrics table using its own dedicated DB connection."""
+    """Searches the metrics table using pgvector cosine similarity."""
     async with AsyncSessionLocal() as session:
-        normalized_name = metric_name.replace(" ", "_").lower()
-        stmt = select(Metric).where(Metric.canonical_name.ilike(f"%{normalized_name}%"))
-        result = await session.execute(stmt)
-        return result.scalars().first()
+        try:
+            vector = await get_embedding(metric_name)
+            # Use pgvector's <-> operator to find the closest semantic match
+            stmt = select(Metric).order_by(text("embedding <-> :vector")).limit(1)
+            result = await session.execute(stmt, {"vector": str(vector)})
+            return result.scalars().first()
+        except Exception as e:
+            print(f"Error fetching metric {metric_name}: {e}")
+            return None
 
 async def fetch_dimension(dim_name: str):
-    """Searches the dimensions table using its own dedicated DB connection."""
+    """Searches the dimensions table using pgvector cosine similarity."""
     async with AsyncSessionLocal() as session:
-        normalized_name = dim_name.replace(" ", "_").lower()
-        stmt = select(Dimension).where(Dimension.canonical_name.ilike(f"%{normalized_name}%"))
-        result = await session.execute(stmt)
-        return result.scalars().first()
+        try:
+            vector = await get_embedding(dim_name)
+            stmt = select(Dimension).order_by(text("embedding <-> :vector")).limit(1)
+            result = await session.execute(stmt, {"vector": str(vector)})
+            return result.scalars().first()
+        except Exception as e:
+            print(f"Error fetching dimension {dim_name}: {e}")
+            return None
 
 async def fetch_glossary(term: str):
-    """Searches the glossary table using its own dedicated DB connection."""
+    """Searches the glossary table using pgvector cosine similarity."""
     async with AsyncSessionLocal() as session:
-        stmt = select(BusinessGlossary).where(BusinessGlossary.term.ilike(f"%{term}%"))
-        result = await session.execute(stmt)
-        return result.scalars().first()
+        try:
+            vector = await get_embedding(term)
+            stmt = select(BusinessGlossary).order_by(text("embedding <-> :vector")).limit(1)
+            result = await session.execute(stmt, {"vector": str(vector)})
+            return result.scalars().first()
+        except Exception as e:
+            print(f"Error fetching glossary {term}: {e}")
+            return None
 
 async def parallel_retrieve(extracted_plan: ExtractedQuery):
     """
     Takes the JSON plan from the LLM and concurrently fetches all required 
-    metadata from PostgreSQL in a single async sweep.
+    metadata from PostgreSQL in a single async sweep using Vector Search.
     """
     tasks = []
     
@@ -50,10 +77,9 @@ async def parallel_retrieve(extracted_plan: ExtractedQuery):
     if extracted_plan.time_range:
         tasks.append(fetch_glossary(extracted_plan.time_range))
         
-    # ⚡ EXECUTE ALL DATABASE QUERIES CONCURRENTLY ⚡
-    # Because each function creates its own session, they can safely run in parallel
+    # ⚡ EXECUTE ALL VECTOR QUERIES CONCURRENTLY ⚡
     results = await asyncio.gather(*tasks)
     
-    # Filter out None values (where a term wasn't found in the DB)
+    # Filter out None values
     retrieved_objects = [res for res in results if res is not None]
     return retrieved_objects
