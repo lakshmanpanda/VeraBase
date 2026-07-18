@@ -1,12 +1,17 @@
 import sqlite3
+import os
+
+# Resolve absolute path to the warehouse DB at module load time (never breaks)
+_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+_DB_PATH = os.path.join(_ROOT_DIR, "data_warehouse.db")
 
 def execute_sql_on_warehouse(sql_query: str) -> list[dict]:
     """
     Connects to the SQLite Data Warehouse, executes the safe query,
     and returns the results as a clean list of dictionaries.
     """
-    # Connect to our dummy external data warehouse
-    conn = sqlite3.connect("data_warehouse.db")
+    # Use the pre-resolved absolute path — never fails regardless of launch directory
+    conn = sqlite3.connect(_DB_PATH)
     
     # This is a crucial setting: It forces SQLite to return rows as dictionaries 
     # (e.g., {"region": "south", "revenue": 500}) instead of plain tuples (e.g., ("south", 500))

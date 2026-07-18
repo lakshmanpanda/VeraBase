@@ -23,7 +23,7 @@ def create_enterprise_warehouse():
             id INTEGER PRIMARY KEY, name TEXT, tier TEXT
         );
         CREATE TABLE employees (
-            id INTEGER PRIMARY KEY, company_id INTEGER, name TEXT, role TEXT, email TEXT
+            id INTEGER PRIMARY KEY, company_id INTEGER, name TEXT, role TEXT, email TEXT, password TEXT
         );
 
         /* --- 2. CRM LAYER --- */
@@ -76,13 +76,15 @@ def create_enterprise_warehouse():
     companies = [(1, "TechCorp", "Enterprise"), (2, "FashionBrand", "Pro"), (3, "HomeGoods", "Growth")]
     cursor.executemany("INSERT INTO companies VALUES (?, ?, ?)", companies)
 
-    # 2. Seed Employees (Admins & Staff)
+    # 2. Seed Employees (Admins & Staff) - Now with passwords!
     employees = [
-        (1, 1, "Admin Alice", "admin", "alice@techcorp.com"), (2, 1, "Staff Bob", "employee", "bob@techcorp.com"),
-        (3, 2, "Admin Carol", "admin", "carol@fashionbrand.com"), (4, 3, "Admin Dave", "admin", "dave@homegoods.com")
+        (1, 1, "Admin Alice", "admin", "alice@techcorp.com", "password123"), 
+        (2, 1, "Staff Bob", "employee", "bob@techcorp.com", "password123"),
+        (3, 2, "Admin Carol", "admin", "carol@fashionbrand.com", "password123"), 
+        (4, 3, "Admin Dave", "admin", "dave@homegoods.com", "password123")
     ]
-    cursor.executemany("INSERT INTO employees VALUES (?, ?, ?, ?, ?)", employees)
-
+    cursor.executemany("INSERT INTO employees VALUES (?, ?, ?, ?, ?, ?)", employees)
+    
     # Data generation parameters
     regions = ['North America', 'Europe', 'Asia', 'South America']
     segments = ['Whale', 'Returning', 'New', 'Churn-Risk']

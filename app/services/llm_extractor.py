@@ -12,10 +12,11 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 def extract_semantic_intent(user_query: str) -> ExtractedQuery:
     """
     Takes raw natural language and extracts strict JSON mapped to the ExtractedQuery schema.
+    Also determines the most appropriate chart visualization type.
     """
     
-    # Using the exact model listed on your resume!
-    active_model = 'gemini-3.1-flash-lite' 
+    # gemini-2.0-flash-lite is fast, cheap, and highly capable for structured extraction
+    active_model = 'gemini-2.0-flash-lite'
     
     response = client.models.generate_content(
         model=active_model,
@@ -25,11 +26,17 @@ def extract_semantic_intent(user_query: str) -> ExtractedQuery:
                 "You are a Semantic Extraction Engine for an enterprise NL2SQL system. "
                 "Your ONLY job is to extract business metrics, dimensions, and filters from the user's text. "
                 "DO NOT write SQL. DO NOT invent database column names. "
-                "Translate the user's request into strict, structural parameters."
+                "Translate the user's request into strict, structural parameters.\n\n"
+                "CHART TYPE SELECTION RULES (mandatory):\n"
+                "- 'kpi': Single aggregate with NO group-by dimension (e.g., 'total revenue', 'how many orders')\n"
+                "- 'line': Any question involving time trends, monthly/yearly breakdowns, or 'over time'\n"
+                "- 'pie': Percentage share, distribution, or proportion across a small set of categories (< 8)\n"
+                "- 'bar': Comparison across named categories like region, platform, segment (not time)\n"
+                "- 'table': Multi-metric queries, detailed breakdowns with many rows, or 'show me all' questions\n"
             ),
             response_mime_type="application/json",
             response_schema=ExtractedQuery,
-            temperature=0.0 # Force deterministic output
+            temperature=0.0  # Force deterministic output
         ),
     )
 

@@ -1,26 +1,222 @@
 @import "tailwindcss";
 
+/* ── Design Tokens ─────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette — deep cinematic charcoal */
+  --bg-base:       #080809;
+  --bg-surface:    #0f0f12;
+  --bg-elevated:   #141419;
+  --bg-muted:      #1c1c24;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-dim:    rgba(255, 255, 255, 0.10);
+  --border-lit:    rgba(255, 255, 255, 0.16);
+
+  /* Typography */
+  --text-primary:  #f0f0f5;
+  --text-secondary:#9191a8;
+  --text-muted:    #5a5a72;
+
+  /* Accent — signal violet/indigo */
+  --accent-primary: #7c6ff7;
+  --accent-hover:   #9b94ff;
+  --accent-glow:    rgba(124, 111, 247, 0.20);
+  --accent-subtle:  rgba(124, 111, 247, 0.08);
+
+  /* Gold — secondary accent */
+  --gold:           #e8b84b;
+  --gold-dim:       rgba(232, 184, 75, 0.15);
+  --gold-glow:      rgba(232, 184, 75, 0.08);
+
+  /* Status */
+  --emerald:        #34d399;
+  --red:            #f87171;
+
+  /* Font stacks */
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-dm-mono), "Fira Code", monospace;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base Reset ────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Selection ────────────────────────────────────────────────────── */
+::selection {
+  background: var(--accent-glow);
+  color: var(--accent-hover);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-lit);
+}
+
+/* ── Typography ────────────────────────────────────────────────────── */
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ── Focus Outline ─────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Ambient background grid ───────────────────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Glass card ────────────────────────────────────────────────────── */
+.glass {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* ── Accent button ─────────────────────────────────────────────────── */
+.btn-accent {
+  background: var(--accent-primary);
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.btn-accent:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 0 30px var(--accent-glow);
+  transform: translateY(-1px);
+}
+
+/* ── Tag / badge ───────────────────────────────────────────────────── */
+.tag-violet {
+  background: var(--accent-subtle);
+  color: var(--accent-hover);
+  border: 1px solid rgba(124, 111, 247, 0.20);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.tag-gold {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border: 1px solid rgba(232, 184, 75, 0.20);
+  font-size: 11px;
+}
+
+/* ── Glow effects ──────────────────────────────────────────────────── */
+.glow-violet {
+  box-shadow: 0 0 60px var(--accent-glow);
+}
+
+.glow-gold {
+  box-shadow: 0 0 60px var(--gold-glow);
+}
+
+/* ── Animated gradient border ──────────────────────────────────────── */
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(124, 111, 247, 0.2); }
+  50%       { border-color: rgba(124, 111, 247, 0.5); }
+}
+
+/* ── Scan line animation (for the terminal/query feel) ─────────────── */
+@keyframes scan {
+  0%   { transform: translateY(-100%); opacity: 0.5; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* ── Pulse dot ─────────────────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── Fade in from bottom ───────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease forwards;
+}
+
+.animate-fade-up-delay {
+  animation: fade-up 0.5s ease 0.15s forwards;
+  opacity: 0;
+}
+
+.animate-fade-up-delay-2 {
+  animation: fade-up 0.5s ease 0.3s forwards;
+  opacity: 0;
+}
+
+/* ── Loading shimmer ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 25%,
+    var(--bg-muted) 50%,
+    var(--bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

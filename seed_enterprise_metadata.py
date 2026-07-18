@@ -49,7 +49,7 @@ METRICS = [
     {
         "name": "total_refunds", 
         "sql": "SUM(refunds_and_returns.amount)", 
-        "desc": "Total monetary value of refunds", 
+        "desc": "Total monetary value of refunds and returns", 
         "grain": "refund", 
         "base_table": "refunds_and_returns",
         "dependencies": []
@@ -76,6 +76,54 @@ METRICS = [
         "desc": "Total money spent on marketing campaigns and advertisements", 
         "grain": "daily_spend", 
         "base_table": "ad_spend_logs",
+        "dependencies": []
+    },
+    {
+        "name": "return_on_ad_spend",
+        "sql": "ROUND(SUM(order_items.price_at_time * order_items.quantity) / NULLIF(SUM(ad_spend_logs.spend), 0), 2)",
+        "desc": "Return on Ad Spend (ROAS): total revenue generated per dollar spent on advertising campaigns. A ROAS of 4 means $4 revenue per $1 spent.",
+        "grain": "campaign",
+        "base_table": "order_items",
+        "dependencies": ["orders", "marketing_campaigns", "ad_spend_logs"]
+    },
+    {
+        "name": "customer_acquisition_cost",
+        "sql": "ROUND(SUM(ad_spend_logs.spend) / NULLIF(COUNT(DISTINCT orders.customer_id), 0), 2)",
+        "desc": "Customer Acquisition Cost (CAC): total advertising spend divided by number of unique customers who placed orders. Lower is better.",
+        "grain": "customer",
+        "base_table": "ad_spend_logs",
+        "dependencies": ["marketing_campaigns", "orders"]
+    },
+    {
+        "name": "supplier_defect_rate",
+        "sql": "ROUND(CAST(COUNT(refunds_and_returns.id) AS REAL) / NULLIF(COUNT(order_items.id), 0) * 100, 2)",
+        "desc": "Supplier Defect Rate: percentage of order items that were returned or refunded, grouped by supplier. Indicates product quality issues from a specific vendor.",
+        "grain": "order_item",
+        "base_table": "order_items",
+        "dependencies": ["refunds_and_returns", "products", "suppliers"]
+    },
+    {
+        "name": "total_orders",
+        "sql": "COUNT(DISTINCT orders.id)",
+        "desc": "Total number of unique orders placed",
+        "grain": "order",
+        "base_table": "orders",
+        "dependencies": []
+    },
+    {
+        "name": "average_order_value",
+        "sql": "ROUND(SUM(order_items.price_at_time * order_items.quantity) / NULLIF(COUNT(DISTINCT order_items.order_id), 0), 2)",
+        "desc": "Average Order Value (AOV): the mean revenue generated per order. Key indicator of purchase behavior.",
+        "grain": "order",
+        "base_table": "order_items",
+        "dependencies": []
+    },
+    {
+        "name": "total_customers",
+        "sql": "COUNT(DISTINCT customers.id)",
+        "desc": "Total number of unique customers",
+        "grain": "customer",
+        "base_table": "customers",
         "dependencies": []
     }
 ]
