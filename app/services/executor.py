@@ -2,7 +2,7 @@ import sqlite3
 import os
 
 # Resolve absolute path to the warehouse DB at module load time (never breaks)
-_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 _DB_PATH = os.path.join(_ROOT_DIR, "data_warehouse.db")
 
 def execute_sql_on_warehouse(sql_query: str) -> list[dict]:

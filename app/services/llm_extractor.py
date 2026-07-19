@@ -15,8 +15,8 @@ def extract_semantic_intent(user_query: str) -> ExtractedQuery:
     Also determines the most appropriate chart visualization type.
     """
     
-    # gemini-2.0-flash-lite is fast, cheap, and highly capable for structured extraction
-    active_model = 'gemini-2.0-flash-lite'
+    # gemini-3.1-flash-lite: 15 RPM / 500 RPD on free tier — confirmed available
+    active_model = 'gemini-3.1-flash-lite'
     
     response = client.models.generate_content(
         model=active_model,
