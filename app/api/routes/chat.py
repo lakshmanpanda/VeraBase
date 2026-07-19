@@ -46,7 +46,11 @@ async def generate_sql(request: ChatRequest, tenant: dict = Depends(get_current_
         retrieved_context = await parallel_retrieve(extracted_plan)
         
         # 3. BFS Resolver: Build validated join plan
-        final_plan = await generate_validated_plan(retrieved_context)
+        #    Pass requested_dimensions so time keywords (month/year) get injected
+        final_plan = await generate_validated_plan(
+            retrieved_context,
+            requested_dimensions=extracted_plan.dimensions
+        )
         
         # 4. SQL Builder: Inject tenant security and assemble query
         verified_company_id = tenant.get("company_id")

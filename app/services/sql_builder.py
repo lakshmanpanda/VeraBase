@@ -22,16 +22,18 @@ TIME_DIMENSION_MAP = {
 
 def _resolve_dimension_sql(dim_name: str, dim_sql: str) -> str:
     """
-    Checks if a dimension is a time-based one and returns the correct
-    SQLite strftime() expression. Otherwise returns the raw column name.
+    Returns the correct SQL expression for a dimension:
+    1. If the name is a known time keyword → use TIME_DIMENSION_MAP strftime()
+    2. If dim_sql is already a function call (synthetic dim) → return as-is
+    3. Otherwise → return the table-prefixed column name (e.g., customers.segment)
     """
     key = dim_name.lower()
     if key in TIME_DIMENSION_MAP:
         return TIME_DIMENSION_MAP[key]
-    # Also check if the column name itself looks like a date field
-    if "date" in dim_sql.lower() or "created_at" in dim_sql.lower():
-        return f"strftime('%Y-%m', {dim_sql})"
-    return dim_sql
+    # Already a full expression (contains a paren) — don't prefix again
+    if "(" in dim_sql:
+        return dim_sql
+    return dim_sql  # Already table-qualified by resolver (e.g., "customers.segment")
 
 
 def build_sql(query_plan: dict, company_id: int) -> str:
